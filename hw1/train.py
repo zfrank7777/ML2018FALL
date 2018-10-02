@@ -1,3 +1,5 @@
+""" This program trains the model and save args to model.npy """
+
 # -*- coding: UTF-8 -*-
 import os
 import numpy as np

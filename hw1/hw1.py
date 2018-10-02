@@ -1,3 +1,5 @@
+""" This program only run testing (load args from model.npy) """
+
 # -*- coding: UTF-8 -*-
 import os
 import sys
