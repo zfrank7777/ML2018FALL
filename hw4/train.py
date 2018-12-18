@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 import numpy as np
-from util import read_text, read_label, time_since, w2v
+from util import read_text, read_label, time_since, w2index
 from sklearn.model_selection import train_test_split
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -17,8 +17,8 @@ class RNN(nn.Module):
         self.batch_size = batch_size
         self.num_layers = num_layers
 
-        # self.embedding = nn.Embedding(input_size, hidden_size)
-        self.fc0 = nn.Linear(input_size, hidden_size)
+        self.embedding = nn.Embedding(input_size, hidden_size)
+        # self.fc0 = nn.Linear(input_size, hidden_size)
         self.gru = nn.LSTM(hidden_size, hidden_size,
                            num_layers=self.num_layers,
                            bidirectional=False, batch_first=True)
@@ -26,7 +26,8 @@ class RNN(nn.Module):
         self.fc2 = nn.Linear(64, 2)
 
     def forward(self, input):
-        embed_input = self.fc0(input)
+        # embed_input = self.fc0(input)
+        embed_input = self.embedding(input.long())
         output, (hidden, _) = self.gru(embed_input)
         label = self.fc2(self.fc1(hidden))
         label = label.view(label.shape[1], -1)
@@ -56,17 +57,15 @@ class DcardDataset(Dataset):
 train_text = read_text(sys.argv[1])
 label = read_label(sys.argv[2])
 # print (label.shape)
-UNK = np.random.random(128)
-EOS = np.random.random(128)
-vec = w2v(train_text, UNK, EOS)
+vec = w2index(train_text)
 # print (vec.shape)
 train_vec, valid_vec, train_label, valid_label = \
     train_test_split(vec, label, test_size=0.2, random_state=42)
 
 """ HYPER-PARAMETESRS """
-input_size = 128
+input_size = 7747
 batch_size = 512
-n_epochs = 50
+n_epochs = 10
 print_every = 1
 hidden_size = 96
 lr = 0.0005

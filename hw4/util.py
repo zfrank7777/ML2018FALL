@@ -1,11 +1,9 @@
 import jieba
-from gensim.models import Word2Vec
 import pickle
 import time
 import math
 import pandas as pd
 import numpy as np
-model = Word2Vec.load("word2vec_model_128_0")
 
 
 def time_since(since):
@@ -43,36 +41,32 @@ def parse_sentence(sentence):
     return parsed
 
 
-def w2v(text, UNK, EOS):
-    vecs = []
-    lengths = []
+def w2index(text_set):
     maxlength = 128
-    for i in range(len(text)):
-        # words = parse_sentence(text[i])
-        words = text[i]
-        sen_vec = []
-        for each in words:
-            if each not in model.wv.vocab:
-                continue
+    with open('word_set_no_seg.pickle', 'rb') as handle:
+        word_set = pickle.load(handle)
+
+    vec = []
+    for text in text_set:
+        # sentence = parse_sentence(text)
+        sentence = text
+        x = []
+        for word in sentence:
+            if word in word_set:
+                x.append(word_set.index(word))
             else:
-                sen_vec.append(model[each])
-        
-        if len(sen_vec) > maxlength-1:
-            sen_vec = sen_vec[:maxlength-1]
-            sen_vec.append(EOS)
-            lengths.append(maxlength)
-        else:
-            sen_vec.append(EOS)
-            lengths.append(len(sen_vec))
-            while len(sen_vec) < maxlength: 
-                sen_vec.append(np.zeros(128))
-        sen_vec = np.array(sen_vec)
-        if sen_vec.shape[1] != maxlength:
-            print ("shape not expected: ", sen_vec.shape)
-        vecs.append(np.array(sen_vec))
-    vecs = np.array(vecs)
-    lengths = np.array(lengths)
-    return vecs
+                x.append(7744)  # UNK
+        x.append(7745)  # EOS
+        # padding
+        while len(x) < maxlength:
+            x.append(7746)
+        if len(x) > maxlength:
+            x = x[:maxlength-1]
+            x.append(7745)
+        x = np.array(x)
+        vec.append(x)
+    vec = np.array(vec)
+    return vec
 
 
 if __name__ == "__main__":
